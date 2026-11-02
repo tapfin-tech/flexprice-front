@@ -1,11 +1,16 @@
+# syntax=docker/dockerfile:1
 # Production image for UAT: static build served by non-root nginx.
 # VITE_* settings are read from .env at build time, so build once per environment.
 FROM node:22-alpine AS build
 WORKDIR /app
+# Dependencies only reinstall when the lockfile changes; the npm cache keeps that fast too.
 COPY package.json package-lock.json ./
-RUN npm ci
+RUN --mount=type=cache,target=/root/.npm \
+    npm ci --no-audit --no-fund
 COPY . .
-RUN npm run build
+# Keeps tsc's incremental state between builds so only changed files are re-checked.
+RUN --mount=type=cache,target=/app/node_modules/.tmp \
+    npm run build
 
 FROM nginxinc/nginx-unprivileged:1.27-alpine
 COPY nginx.conf /etc/nginx/conf.d/default.conf

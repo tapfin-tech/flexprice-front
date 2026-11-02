@@ -25,3 +25,7 @@ dist-ssr
 .vercel
 tsconfig.tsbuildinfo
 tsconfig.app.tsbuildinfo
+
+# Not needed in the image build
+.git
+dist
